@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/generator/presentation/generator_screen.dart';
@@ -15,7 +17,7 @@ import '../providers.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: _RiverpodRefreshStream(ref, vaultUnlockedProvider),
+    refreshListenable: _RiverpodRefreshNotifier(ref, vaultUnlockedProvider),
     redirect: (context, state) {
       final unlocked = ref.read(vaultUnlockedProvider);
       final loc = state.matchedLocation;
@@ -49,29 +51,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 });
 
 /// Bridges a Riverpod provider's changes into a [Listenable] so go_router
-/// can re-run its redirect logic whenever the unlock state flips.
-class _RiverpodRefreshStream extends ChangeNotifierLike {
-  _RiverpodRefreshStream(Ref ref, StateProvider<bool> provider) {
+/// re-runs its redirect logic whenever the unlock state flips.
+class _RiverpodRefreshNotifier extends ChangeNotifier {
+  _RiverpodRefreshNotifier(Ref ref, StateProvider<bool> provider) {
     ref.listen(provider, (_, __) => notifyListeners());
   }
 }
-
-// Minimal ChangeNotifier-compatible base so we don't need to import
-// flutter/foundation just for this tiny bridge class.
-abstract class ChangeNotifierLike implements Listenable {
-  final List<VoidCallback> _listeners = [];
-
-  @override
-  void addListener(VoidCallback listener) => _listeners.add(listener);
-
-  @override
-  void removeListener(VoidCallback listener) => _listeners.remove(listener);
-
-  void notifyListeners() {
-    for (final l in List.of(_listeners)) {
-      l();
-    }
-  }
-}
-
-typedef VoidCallback = void Function();
