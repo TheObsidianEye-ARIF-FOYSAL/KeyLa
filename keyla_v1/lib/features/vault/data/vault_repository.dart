@@ -201,4 +201,12 @@ class VaultRepository {
     lock();
     await _db.close();
   }
+
+  /// Wipes the entire local vault (DB file + on-device DB passphrase). The
+  /// server-side backup, if the user opted into sync, is untouched here —
+  /// deleting that is a separate explicit account-deletion action.
+  Future<void> deleteEverything() async {
+    await close();
+    await VaultDatabase.deleteAll();
+  }
 }
