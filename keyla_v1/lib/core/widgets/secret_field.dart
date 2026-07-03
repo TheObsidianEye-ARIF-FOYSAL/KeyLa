@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 
 /// A masked text field with a reveal toggle, per spec §8.3 and the
 /// accessibility requirement that masked fields announce
