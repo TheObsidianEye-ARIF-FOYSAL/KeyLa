@@ -38,6 +38,8 @@ class KdfParams {
 /// login credential). Because the sub-salts differ, a server-side breach of
 /// the auth secret cannot be used to reconstruct the vault-unlock key, even
 /// though both start from the same master password.
+const int _minDomainLength = 16;
+
 class KdfService {
   KdfService(this._sodium);
 
