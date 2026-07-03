@@ -4,11 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/models/app_user.dart';
-
-const _kDefaultBaseUrl = String.fromEnvironment(
-  'SERVER_BASE_URL',
-  defaultValue: 'https://your-host.example.com/server',
-);
+import '../../../core/server_config.dart';
 
 const _kPhoneKey = 'keyla_session_phone';
 const _kTokenKey = 'keyla_session_token';
