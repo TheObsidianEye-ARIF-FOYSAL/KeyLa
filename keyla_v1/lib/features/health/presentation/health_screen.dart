@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../vault/domain/credential.dart';
-import '../domain/health_report.dart';
 import 'health_providers.dart';
 
 class HealthScreen extends ConsumerWidget {
