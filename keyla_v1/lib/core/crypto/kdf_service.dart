@@ -30,22 +30,20 @@ class KdfParams {
       );
 }
 
-/// Argon2id-based key derivation from the user's master password.
+/// Argon2id-based key derivation from the user's Keyla master password.
 ///
-/// Two secrets are derived from the *same* master password using
-/// domain-separated sub-salts: [deriveVaultUnlockKey] (never leaves the
-/// device) and [deriveServerAuthSecret] (sent to the ARIF(KyLa) backend as the
-/// login credential). Because the sub-salts differ, a server-side breach of
-/// the auth secret cannot be used to reconstruct the vault-unlock key, even
-/// though both start from the same master password.
-const int _minDomainLength = 16;
-
+/// This key never leaves the device and is unrelated to the ARIF(KyLa)
+/// account password (see features/auth) — that's a separate plain
+/// phone+password credential verified server-side, exactly like
+/// MedRemind's account gate. Keeping the two decoupled means a server
+/// compromise of the account password can never expose vault contents.
 class KdfService {
   KdfService(this._sodium);
 
   final SodiumSumo _sodium;
 
   static const int keyBytes = 32;
+  static const String _vaultUnlockDomain = 'keyla.vault-unlock.v1......';
 
   /// Generates fresh KDF params with a random salt, using the "moderate"
   /// libsodium cost profile (a reasonable interactive/mobile balance).
@@ -59,7 +57,6 @@ class KdfService {
   }
 
   Uint8List _domainSalt(Uint8List baseSalt, String domain) {
-    assert(domain.length >= _minDomainLength, 'domain tag too short for generichash key');
     final key = SecureKey.fromList(_sodium, Uint8List.fromList(utf8.encode(domain)));
     try {
       return _sodium.crypto.genericHash(
@@ -72,11 +69,11 @@ class KdfService {
     }
   }
 
-  SecureKey _derive(String password, KdfParams params, String domain) {
-    final baseSalt = base64Decode(params.salt);
-    final salt = _domainSalt(baseSalt, domain);
-    final passwordBytes = utf8.encode(password);
-    final int8Password = Int8List.fromList(passwordBytes);
+  /// Derives the local vault-unlock key. Caller owns the returned
+  /// [SecureKey] and must [SecureKey.dispose] it when done.
+  SecureKey deriveVaultUnlockKey(String masterPassword, KdfParams params) {
+    final salt = _domainSalt(base64Decode(params.salt), _vaultUnlockDomain);
+    final int8Password = Int8List.fromList(utf8.encode(masterPassword));
     return _sodium.crypto.pwhash(
       outLen: keyBytes,
       password: int8Password,
@@ -86,14 +83,4 @@ class KdfService {
       alg: CryptoPwhashAlgorithm.argon2id13,
     );
   }
-
-  /// Derives the local vault-unlock key. Caller owns the returned
-  /// [SecureKey] and must [SecureKey.dispose] it when done.
-  SecureKey deriveVaultUnlockKey(String masterPassword, KdfParams params) =>
-      _derive(masterPassword, params, 'keyla.vault-unlock.v1......');
-
-  /// Derives the secret sent to the ARIF(KyLa) server as the login
-  /// credential. Caller owns the returned [SecureKey].
-  SecureKey deriveServerAuthSecret(String masterPassword, KdfParams params) =>
-      _derive(masterPassword, params, 'keyla.server-auth.v1.......');
 }
