@@ -57,14 +57,8 @@ class KdfService {
   }
 
   Uint8List _domainSalt(Uint8List baseSalt, String domain) {
-    final key = SecureKey.fromList(
-      _sodium,
-      Uint8List.fromList(
-        utf8.encode(domain).length >= _sodium.crypto.genericHash.keyBytesMin
-            ? utf8.encode(domain)
-            : utf8.encode(domain.padRight(_sodium.crypto.genericHash.keyBytesMin, '.')),
-      ),
-    );
+    assert(domain.length >= _minDomainLength, 'domain tag too short for generichash key');
+    final key = SecureKey.fromList(_sodium, Uint8List.fromList(utf8.encode(domain)));
     try {
       return _sodium.crypto.genericHash(
         message: baseSalt,
