@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 class SyncClient {
   SyncClient({required this.baseUrl});
 
-  /// e.g. https://your-host.example.com/keyla_v1/server
+  /// e.g. https://your-host.example.com/server
   final String baseUrl;
 
   Uri _uri(String path) => Uri.parse('$baseUrl/$path');
