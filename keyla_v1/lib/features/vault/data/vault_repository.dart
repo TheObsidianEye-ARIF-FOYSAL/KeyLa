@@ -39,6 +39,15 @@ class VaultRepository {
 
   KdfService get kdf => _kdf;
 
+  /// Opens the local SQLCipher database (using a device-bound passphrase
+  /// from secure storage, unrelated to the master password) and returns a
+  /// repository over it. The vault itself still starts locked.
+  static Future<VaultRepository> bootstrap({required SodiumSumo sodium}) async {
+    final passphrase = await SqlcipherKeyService().getOrCreatePassphrase();
+    final database = await VaultDatabase.open(passphrase);
+    return VaultRepository(sodium: sodium, database: database);
+  }
+
   /// First-run setup: generates a fresh vault key, wraps it under the
   /// unlock key derived from [masterPassword], and persists VaultMeta.
   Future<void> createVault(String masterPassword) async {
