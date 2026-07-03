@@ -37,9 +37,13 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> with SingleTickerPr
     super.dispose();
   }
 
-  Future<void> _tryBiometric() async {
+  Future<void> _autoTryBiometricOnce() async {
     if (_triedBiometricThisSession) return;
     _triedBiometricThisSession = true;
+    await _tryBiometric();
+  }
+
+  Future<void> _tryBiometric() async {
     final settings = await ref.read(settingsServiceProvider.future);
     if (!settings.biometricEnabled) return;
     final biometrics = ref.read(biometricUnlockServiceProvider);
