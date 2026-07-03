@@ -83,7 +83,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => _pickTheme(settings),
             ),
             const _SectionHeader('Backup'),
-            const SyncSettingsTile(),
+            const BackupSettingsTile(),
             ListTile(
               leading: const Icon(Icons.key_outlined),
               title: const Text('View recovery kit'),
