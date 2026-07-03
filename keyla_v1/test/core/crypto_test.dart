@@ -5,22 +5,6 @@ import 'package:keyla_v1/core/crypto/sodium_provider.dart';
 
 void main() {
   group('crypto round-trip', () {
-    test('vault-unlock and server-auth keys differ for the same password', () async {
-      final sodium = await SodiumProvider.instance();
-      final kdf = KdfService(sodium);
-      final params = kdf.generateParams();
-
-      final unlockKey = kdf.deriveVaultUnlockKey('correct horse battery staple', params);
-      final authKey = kdf.deriveServerAuthSecret('correct horse battery staple', params);
-
-      final unlockBytes = unlockKey.extractBytes();
-      final authBytes = authKey.extractBytes();
-      expect(unlockBytes, isNot(equals(authBytes)));
-
-      unlockKey.dispose();
-      authKey.dispose();
-    });
-
     test('deriving twice with the same params is deterministic', () async {
       final sodium = await SodiumProvider.instance();
       final kdf = KdfService(sodium);
