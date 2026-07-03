@@ -25,7 +25,7 @@ class UserAuthService {
 
   String? _token;
 
-  UserAuthService({String? baseUrl}) : _baseUrl = _sanitize(baseUrl ?? _kDefaultBaseUrl);
+  UserAuthService({String? baseUrl}) : _baseUrl = _sanitize(baseUrl ?? kServerBaseUrl);
 
   /// Reads a previously persisted session (if any) so the app can restore
   /// it on start. Returns the phone number to restore, or null.
