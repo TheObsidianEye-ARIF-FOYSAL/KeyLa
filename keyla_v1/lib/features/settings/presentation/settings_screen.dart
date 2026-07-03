@@ -268,6 +268,80 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
+class _AccountSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userAuthProvider).user;
+    if (user == null) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.person_outline_rounded),
+          title: Text(user.name),
+          subtitle: Text(user.phone),
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout_rounded),
+          title: const Text('Log out'),
+          subtitle: const Text('Signs out — your local vault stays on this device'),
+          onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Log out?'),
+                content: const Text('You will need your phone number and account password to sign in again.'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                  ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              await ref.read(userAuthProvider.notifier).logout();
+              if (context.mounted) context.go('/');
+            }
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.person_remove_outlined, color: AppColors.danger),
+          title: Text('Delete account', style: TextStyle(color: AppColors.danger)),
+          subtitle: const Text('Removes your ARIF(KyLa) account and any server backup'),
+          onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Delete account?'),
+                content: const Text(
+                  'This permanently deletes your ARIF(KyLa) account and encrypted backup from the server. Your local vault on this device is unaffected.',
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text('Delete', style: TextStyle(color: AppColors.danger)),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              final ok = await ref.read(userAuthProvider.notifier).deleteAccount();
+              if (context.mounted) {
+                if (ok) {
+                  context.go('/');
+                } else {
+                  final error = ref.read(userAuthProvider).error;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? 'Could not delete account')));
+                }
+              }
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.text);
   final String text;
