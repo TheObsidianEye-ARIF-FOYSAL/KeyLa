@@ -54,6 +54,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 /// re-runs its redirect logic whenever the unlock state flips.
 class _RiverpodRefreshNotifier extends ChangeNotifier {
   _RiverpodRefreshNotifier(Ref ref, StateProvider<bool> provider) {
-    ref.listen(provider, (_, __) => notifyListeners());
+    ref.listen(provider, (_, _) => notifyListeners());
   }
 }
