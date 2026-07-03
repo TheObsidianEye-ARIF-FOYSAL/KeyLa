@@ -195,6 +195,8 @@ class VaultRepository {
 
   static Future<bool> vaultExists() => VaultDatabase.exists();
 
+  Future<bool> hasVaultMeta() async => (await _metaDao.read()) != null;
+
   Future<void> close() async {
     lock();
     await _db.close();
