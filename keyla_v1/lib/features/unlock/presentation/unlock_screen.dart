@@ -27,7 +27,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> with SingleTickerPr
     super.initState();
     _shieldController = AnimationController(vsync: this, duration: const Duration(milliseconds: 260));
     ScreenPrivacy.enable();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _tryBiometric());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoTryBiometricOnce());
   }
 
   @override
