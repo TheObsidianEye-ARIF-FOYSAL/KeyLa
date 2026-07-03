@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../auth/presentation/user_auth_provider.dart';
 
-/// Decides where to send the user on cold start: onboarding (no vault yet)
-/// or the lock screen (vault exists but is locked).
+/// Decides where to send the user on cold start, resolving both gates in
+/// order: account session (restored from a persisted token, if any), then
+/// local vault state (no vault yet -> onboarding, vault exists -> lock screen).
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -22,6 +24,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _decide() async {
+    await ref.read(userAuthProvider.notifier).ready;
+    if (!mounted) return;
+
+    if (!ref.read(userAuthProvider).isLoggedIn) {
+      context.go('/auth');
+      return;
+    }
+
     final repo = await ref.read(vaultRepositoryProvider.future);
     final hasVault = await repo.hasVaultMeta();
     if (!mounted) return;
