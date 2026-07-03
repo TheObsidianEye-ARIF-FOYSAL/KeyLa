@@ -21,14 +21,12 @@ class VaultRepository {
   VaultRepository({
     required SodiumSumo sodium,
     required VaultDatabase database,
-  })  : _sodium = sodium,
-        _kdf = KdfService(sodium),
+  })  : _kdf = KdfService(sodium),
         _cipher = CipherService(sodium),
         _db = database,
         _metaDao = VaultMetaDao(database.db),
         _credentialDao = CredentialDao(database.db);
 
-  final SodiumSumo _sodium;
   final KdfService _kdf;
   final CipherService _cipher;
   final VaultDatabase _db;
