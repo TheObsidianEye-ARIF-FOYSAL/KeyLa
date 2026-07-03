@@ -58,7 +58,7 @@ class VaultHomeScreen extends ConsumerWidget {
                       child: health.when(
                         data: (report) => _HealthChip(score: report.score, onTap: () => context.push('/health')),
                         loading: () => const SizedBox(height: 44),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -84,7 +84,7 @@ class VaultHomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                   sliver: SliverList.separated(
                     itemCount: list.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 4),
+                    separatorBuilder: (_, _) => const SizedBox(height: 4),
                     itemBuilder: (context, i) {
                       final c = list[i];
                       return TweenAnimationBuilder<double>(

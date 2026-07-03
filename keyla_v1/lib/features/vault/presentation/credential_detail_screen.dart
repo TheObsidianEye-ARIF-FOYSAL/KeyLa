@@ -60,6 +60,7 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
                     final repo = await ref.read(vaultRepositoryProvider.future);
                     await repo.markUsed(credential.id);
                     invalidateVault(ref);
+                    if (!context.mounted) return;
                     _copy(context, ref, credential.username);
                   },
                 ),
@@ -132,7 +133,7 @@ class _FieldTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
             if (onCopy != null)
               IconButton(icon: Icon(Icons.copy_outlined, color: AppColors.primary), onPressed: onCopy),
           ],
