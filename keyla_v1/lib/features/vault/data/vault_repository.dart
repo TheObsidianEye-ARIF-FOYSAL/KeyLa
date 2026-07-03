@@ -197,6 +197,44 @@ class VaultRepository {
 
   Future<bool> hasVaultMeta() async => (await _metaDao.read()) != null;
 
+  Future<KdfParams> currentKdfParams() async {
+    final meta = await _metaDao.read();
+    if (meta == null) throw StateError('Vault has not been created yet');
+    return meta.kdfParams;
+  }
+
+  /// Everything needed to restore the vault on another device: the wrapped
+  /// vault key plus every credential row, both still ciphertext — this is
+  /// exactly what's safe to hand to the ARIF(KyLa) backup server.
+  Future<Map<String, dynamic>> exportForSync() async {
+    final meta = await _metaDao.read();
+    if (meta == null) throw StateError('Vault has not been created yet');
+    final rows = await _credentialDao.all();
+    return {
+      'wrappedVaultKey': meta.wrappedVaultKey.toJson(),
+      'credentials': rows.map((r) => r.toMap()).toList(),
+    };
+  }
+
+  /// Restores a vault previously produced by [exportForSync] onto this
+  /// device. [kdfParams] must be the same ones used when the export's
+  /// wrapped vault key was created (the sync server stores them alongside
+  /// the blob) so the master password re-derives the same unlock key.
+  Future<void> importFromSync(Map<String, dynamic> export, KdfParams kdfParams) async {
+    final wrappedVaultKey = EncryptedPayload.fromJson(
+      export['wrappedVaultKey'] as Map<String, dynamic>,
+    );
+    final existing = await _metaDao.read();
+    if (existing == null) {
+      await _metaDao.insert(VaultMetaRecord(wrappedVaultKey: wrappedVaultKey, kdfParams: kdfParams, version: 1));
+    } else {
+      await _metaDao.updateWrappedVaultKey(wrappedVaultKey, kdfParams);
+    }
+    for (final row in (export['credentials'] as List).cast<Map<String, dynamic>>()) {
+      await _credentialDao.upsert(CredentialRow.fromMap(row));
+    }
+  }
+
   Future<void> close() async {
     lock();
     await _db.close();
