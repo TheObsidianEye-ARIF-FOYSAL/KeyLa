@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/crypto/cipher_service.dart';
 import '../../../core/crypto/kdf_service.dart';
 import '../../../core/db/credential_dao.dart';
+import '../../../core/db/sqlcipher_key_service.dart';
 import '../../../core/db/vault_database.dart';
 import '../../../core/db/vault_meta_dao.dart';
 import '../../../core/security/password_strength.dart';
