@@ -1,10 +1,20 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/crypto/kdf_service.dart';
 import '../../../core/providers.dart';
 import '../../auth/presentation/user_auth_provider.dart';
 import '../../vault/presentation/vault_providers.dart';
 import 'backup_providers.dart';
+
+String _encodeExport(Map<String, dynamic> export) => base64Encode(utf8.encode(jsonEncode(export)));
+
+Map<String, dynamic> _decodeExport(String blobBase64) =>
+    jsonDecode(utf8.decode(base64Decode(blobBase64))) as Map<String, dynamic>;
+
+KdfParams _kdfParamsFromJson(Map<String, dynamic> json) => KdfParams.fromJson(json);
 
 /// Backs up / restores the vault to the same ARIF(KyLa) account the user is
 /// already signed in to (see features/auth) — no separate email/password
