@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/secret_field.dart';
+import '../../auth/presentation/user_auth_provider.dart';
+import '../../backup/presentation/backup_settings_tile.dart';
 import '../../onboarding/data/recovery_kit.dart';
-import '../../sync/presentation/sync_settings_tile.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -25,6 +26,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: settingsAsync.when(
         data: (settings) => ListView(
           children: [
+            const _SectionHeader('Account'),
+            _AccountSection(),
             const _SectionHeader('Security'),
             ListTile(
               leading: const Icon(Icons.password_outlined),
