@@ -11,7 +11,6 @@ class BiometricUnlockService {
   BiometricUnlockService()
       : _auth = LocalAuthentication(),
         _storage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
           iOptions: IOSOptions(accessibility: KeychainAccessibility.unlocked_this_device),
         );
 
@@ -45,7 +44,8 @@ class BiometricUnlockService {
   Future<String?> authenticateAndFetchPassword() async {
     final authenticated = await _auth.authenticate(
       localizedReason: 'Unlock your Keyla vault',
-      options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true),
+      biometricOnly: true,
+      persistAcrossBackgrounding: true,
     );
     if (!authenticated) return null;
     return _storage.read(key: _key);

@@ -12,9 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// cannot substitute for.
 class SqlcipherKeyService {
   SqlcipherKeyService()
-      : _storage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        );
+      : _storage = const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
   static const _key = 'sqlcipher_db_passphrase';
