@@ -69,6 +69,7 @@ PHP + PDO/SQLite, structured file-for-file like `med_remind_v2/server`:
 - `arif_kyla_db.php` — shared helpers (`arif_kyla_db()`, CORS, JSON in/out, session check), `users` table (phone PK, name, password_hash, session_token) + `vault_blobs` table (phone PK, ciphertext blob, kdf salt/params).
 - `arif_kyla_check_phone.php`, `_register.php`, `_login.php`, `_profile.php`, `_change_password.php`, `_delete_account.php` — mirror `medremind_*.php` 1:1 (bcrypt via `password_hash`/`password_verify`, opaque session tokens).
 - `arif_kyla_vault_upload.php` / `_vault_download.php` — store/retrieve the client's already-encrypted vault export. The server never sees a plaintext credential or the master password — only a bcrypt-hashed account password and opaque ciphertext.
+- `.htaccess` — denies HTTP access to `*.db` (and journal/WAL siblings) plus directory listings. `arif_kyla_users.db` is created next to the scripts, i.e. inside the public web root on a typical shared host, so without this it would be directly downloadable — handing over every bcrypt hash and encrypted vault blob for offline cracking. **nginx hosts need the equivalent `location` rule instead; `.htaccess` does nothing there.**
 
 ### 3. Web version + landing page (`Keyla/landing/`, `Keyla/scripts/`, `Keyla/.github/`)
 
@@ -93,6 +94,14 @@ palette, and carries an explicit notice about the web build's limits.
    installed by `dart run sqflite_common_ffi_web:setup`, both committed).
 3. `web/index.html` + `manifest.json` rebranded off the Flutter template, and
    `web/icons/*` + `favicon.png` regenerated from the Android launcher icon.
+
+**Device Preview** wraps the web build (like MedRemind's demo) so desktop
+browsers show the app in a phone frame; phones get it full-bleed. Gated by
+`devicePreviewEnabled` in `lib/core/utils/device_preview_gate.dart`, which
+reads `defaultTargetPlatform` + the implicit view's width from `dart:ui`
+rather than MedRemind's deprecated `dart:html` detector — so no
+conditional-import stub is needed. Adding `device_preview` forced `intl` down
+to `^0.20.2`, since `flutter_localizations` pins that exact version.
 
 `local_auth` is also native-only, but `BiometricUnlockService.isDeviceSupported()`
 already swallows the failure, so web degrades to master-password-only unlock

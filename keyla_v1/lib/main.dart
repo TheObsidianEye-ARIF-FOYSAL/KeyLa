@@ -1,12 +1,19 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/device_preview_gate.dart';
 
 void main() {
-  runApp(const ProviderScope(child: KeylaApp()));
+  const app = ProviderScope(child: KeylaApp());
+  // Desktop browsers get the Device Preview phone frame; phones and native
+  // builds run the app full-bleed. See [devicePreviewEnabled].
+  runApp(devicePreviewEnabled
+      ? DevicePreview(enabled: true, builder: (context) => app)
+      : app);
 }
 
 class KeylaApp extends ConsumerStatefulWidget {
@@ -46,6 +53,8 @@ class _KeylaAppState extends ConsumerState<KeylaApp> {
         darkTheme: AppTheme.dark(),
         themeMode: themeMode,
         routerConfig: router,
+        locale: devicePreviewEnabled ? DevicePreview.locale(context) : null,
+        builder: devicePreviewEnabled ? DevicePreview.appBuilder : null,
       ),
     );
   }

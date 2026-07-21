@@ -39,7 +39,15 @@ flutter run --dart-define=SERVER_BASE_URL=https://your-host.example.com/server
 ```
 
 The server (`server/`) is plain PHP + PDO/SQLite — deploy it to any PHP host.
-The database file is created on first request.
+The database file (`arif_kyla_users.db`) is created next to the scripts on
+first request. **Deploy `server/.htaccess` alongside them** — it blocks HTTP
+access to that file, which otherwise sits in the public web root holding every
+user's bcrypt hash and encrypted vault blob. On nginx (no `.htaccess` support)
+add the equivalent yourself:
+
+```nginx
+location ~* \.(db|sqlite3?|db-journal|db-wal|db-shm)$ { deny all; }
+```
 
 ---
 
@@ -80,6 +88,14 @@ but regenerate them after a dependency bump):
 dart run sodium_libs:update_web          # sodium.js — else the app hangs at splash
 dart run sqflite_common_ffi_web:setup    # sqflite_sw.js + sqlite3.wasm
 ```
+
+### Device Preview
+
+The web build is wrapped in [Device Preview](https://pub.dev/packages/device_preview),
+so a desktop browser shows the app inside a phone frame with a device picker.
+Phones get the app full-bleed instead — the frame would be pointless there.
+Native builds never load it. The switch is `devicePreviewEnabled` in
+`lib/core/utils/device_preview_gate.dart`.
 
 ## ⚠️ Web build limitations
 

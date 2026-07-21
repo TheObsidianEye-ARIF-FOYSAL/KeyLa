@@ -1,0 +1,19 @@
+# The SQLite file lives next to the PHP scripts, so on a typical shared host
+# it sits inside the public web root — i.e. directly downloadable over HTTP.
+# For Keyla that file holds every user's bcrypt hash *and* their encrypted
+# vault blob, so serving it would hand an attacker the whole corpus to crack
+# offline. Deny it (and its journal/WAL siblings) explicitly.
+<FilesMatch "\.(db|sqlite|sqlite3|db-journal|db-wal|db-shm)$">
+    Require all denied
+</FilesMatch>
+
+# Apache < 2.4 fallback
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(db|sqlite|sqlite3|db-journal|db-wal|db-shm)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# No directory listings.
+Options -Indexes
