@@ -1,5 +1,5 @@
 name: keyla_v1
-description: "A new Flutter project."
+description: "Keyla — a zero-knowledge password manager with an encrypted local vault."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -47,6 +47,9 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.6
   shared_preferences: ^2.5.5
+  # Web-only fallback for the vault DB (IndexedDB-backed sqflite); sqflite_sqlcipher
+  # is native-only. See VaultDatabase for the caveats this implies.
+  sqflite_common_ffi_web: ^1.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

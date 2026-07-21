@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyla — Your Passwords, Sealed</title>
+<meta name="description" content="Keyla is a zero-knowledge password manager: Argon2id + XChaCha20-Poly1305 encryption, an encrypted SQLCipher vault, a password generator, and a health dashboard. Your master password never leaves your device.">
+<meta name="theme-color" content="#4F46E5">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icons/Icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Keyla">
+<style>
+  :root{
+    --primary:#4F46E5;
+    --primary-dark:#3730A3;
+    --primary-light:#818CF8;
+    --bg:#F5F6FA;
+    --surface:#FFFFFF;
+    --surface-variant:#ECEDF5;
+    --outline:#D8DAE6;
+    --text:#14151A;
+    --text-muted:#6B6F80;
+    --success:#10B981;
+    --warning:#F59E0B;
+    --danger:#F43F5E;
+    --radius-lg:16px;
+    --radius-xl:24px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0F1117;
+      --surface:#1A1D27;
+      --surface-variant:#232735;
+      --outline:#333849;
+      --text:#F2F3F7;
+      --text-muted:#9AA0B4;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+  /* Nav */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--outline);
+  }
+  nav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;row-gap:10px;padding:14px 24px;max-width:1120px;margin:0 auto;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+  .brand img{width:32px;height:32px;border-radius:8px;}
+  .nav-links{display:flex;gap:28px;font-size:15px;font-weight:500;}
+  .nav-links a{color:var(--text-muted);transition:color .15s;}
+  .nav-links a:hover{color:var(--primary);}
+  .nav-actions{display:flex;align-items:center;gap:10px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 24px;border-radius:100px;font-weight:600;font-size:15px;
+    border:none;cursor:pointer;transition:transform .15s, box-shadow .15s;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;box-shadow:0 8px 24px -8px rgba(79,70,229,.6);}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(79,70,229,.7);}
+  .btn-outline{background:transparent;border:1.5px solid var(--outline);color:var(--text);}
+  .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+  .btn-sm{padding:9px 18px;font-size:14px;}
+  .btn[hidden]{display:none !important;}
+  .subtext-link{font-size:13px;color:var(--text-muted);text-decoration:underline;text-underline-offset:3px;}
+  .subtext-link:hover{color:var(--primary);}
+
+  /* iOS install modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .modal-overlay[hidden]{display:none;}
+  .modal-card{
+    background:var(--surface);width:100%;max-width:420px;border-radius:24px 24px 0 0;
+    padding:28px 24px 32px;box-shadow:0 -10px 40px rgba(0,0,0,.3);
+  }
+  @media (min-width:640px){
+    .modal-overlay{align-items:center;}
+    .modal-card{border-radius:24px;}
+  }
+  .modal-card h3{font-size:18px;font-weight:800;margin-bottom:14px;}
+  .modal-card ol{padding-left:20px;font-size:14px;color:var(--text-muted);display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+  .modal-card ol b{color:var(--text);}
+  .modal-card .btn{width:100%;}
+
+  /* Hero */
+  .hero{padding:88px 24px 40px;position:relative;overflow:hidden;}
+  .hero::before{
+    content:"";position:absolute;top:-220px;left:10%;
+    width:600px;height:600px;
+    background:radial-gradient(circle, rgba(79,70,229,.30), transparent 70%);
+    z-index:-1;filter:blur(20px);
+  }
+  .hero::after{
+    content:"";position:absolute;top:-100px;right:-10%;
+    width:500px;height:500px;
+    background:radial-gradient(circle, rgba(16,185,129,.20), transparent 70%);
+    z-index:-1;filter:blur(20px);
+  }
+  .hero-grid{
+    max-width:1120px;margin:0 auto;
+    display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--surface-variant);border:1px solid var(--outline);
+    padding:6px 16px;border-radius:100px;font-size:13px;font-weight:600;color:var(--primary);
+    margin-bottom:24px;
+  }
+  .hero h1{font-size:clamp(34px,5vw,54px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;}
+  .hero h1 span{background:linear-gradient(135deg,var(--primary),var(--success));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p{font-size:18px;color:var(--text-muted);max-width:480px;margin-bottom:36px;}
+  .hero-cta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:36px;}
+  .hero-trust{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text-muted);}
+  .hero-trust .avatars{display:flex;}
+  .hero-trust .avatars span{
+    width:28px;height:28px;border-radius:50%;border:2px solid var(--bg);
+    display:flex;align-items:center;justify-content:center;font-size:13px;margin-left:-8px;
+    background:linear-gradient(135deg,var(--primary),var(--success));color:#fff;
+  }
+  .hero-trust .avatars span:first-child{margin-left:0;}
+
+  /* Phone mockup (CSS-only preview of the vault home) */
+  .phone-stage{position:relative;display:flex;justify-content:center;align-items:center;padding:20px 0;}
+  .phone{
+    position:relative;width:280px;height:580px;border-radius:44px;
+    background:#0F1117;padding:14px;box-shadow:0 40px 90px -20px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.05);
+    animation:float 5s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+  .phone-notch{
+    position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    width:120px;height:24px;background:#0F1117;border-radius:0 0 16px 16px;z-index:5;
+  }
+  .phone-screen{
+    width:100%;height:100%;border-radius:32px;overflow:hidden;position:relative;
+    background:#12141C;color:#F2F3F7;padding:44px 16px 16px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .mock-title{font-size:19px;font-weight:800;}
+  .mock-search{
+    background:#1A1D27;border:1px solid #333849;border-radius:12px;
+    padding:9px 12px;font-size:12px;color:#9AA0B4;
+  }
+  .mock-score{
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;
+  }
+  .mock-ring{
+    width:44px;height:44px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(#10B981 0 82%, rgba(255,255,255,.25) 82% 100%);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .mock-ring i{
+    width:32px;height:32px;border-radius:50%;background:var(--primary-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-style:normal;font-size:11px;font-weight:800;
+  }
+  .mock-score b{display:block;font-size:13px;}
+  .mock-score span{font-size:11px;opacity:.85;}
+  .mock-item{
+    background:#1A1D27;border:1px solid #262B3A;border-radius:14px;
+    padding:11px 12px;display:flex;align-items:center;gap:11px;
+  }
+  .mock-avatar{
+    width:34px;height:34px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;
+  }
+  .mock-item b{display:block;font-size:13px;font-weight:700;}
+  .mock-item small{font-size:11px;color:#9AA0B4;}
+  .mock-dot{width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0;}
+  .float-badge{
+    position:absolute;background:var(--surface);border:1px solid var(--outline);border-radius:16px;
+    padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+    box-shadow:0 16px 34px -12px rgba(0,0,0,.25);animation:float 5s ease-in-out infinite;
+  }
+  .float-badge.locked{top:12%;left:-6%;color:var(--success);animation-delay:.3s;}
+  .float-badge.health{bottom:10%;right:-8%;color:var(--warning);animation-delay:.7s;}
+
+  /* Stats */
+  .stats{display:flex;justify-content:center;gap:56px;flex-wrap:wrap;padding:48px 24px;border-top:1px solid var(--outline);border-bottom:1px solid var(--outline);}
+  .stat{text-align:center;}
+  .stat b{display:block;font-size:32px;font-weight:800;color:var(--primary);}
+  .stat span{font-size:14px;color:var(--text-muted);}
+
+  /* Sections */
+  section{padding:88px 24px;}
+  .section-head{text-align:center;max-width:640px;margin:0 auto 56px;}
+  .section-head .eyebrow{background:var(--surface-variant);}
+  .section-head h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.5px;margin-bottom:14px;}
+  .section-head p{color:var(--text-muted);font-size:16px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;max-width:1120px;margin:0 auto;}
+  .card{
+    background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);
+    padding:28px;transition:transform .2s,box-shadow .2s;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 40px -16px rgba(0,0,0,.2);}
+  .icon-badge{
+    width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:22px;margin-bottom:18px;
+  }
+  .card h3{font-size:17px;font-weight:700;margin-bottom:8px;}
+  .card p{font-size:14px;color:var(--text-muted);}
+
+  /* Security band */
+  .band{background:var(--surface-variant);}
+  .sec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:1120px;margin:0 auto;}
+  .sec{border-radius:var(--radius-lg);padding:22px;color:#fff;position:relative;overflow:hidden;}
+  .sec h4{font-size:15px;font-weight:700;margin-bottom:6px;}
+  .sec p{font-size:13px;opacity:.92;}
+  .sec code{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:rgba(255,255,255,.18);padding:1px 6px;border-radius:5px;}
+
+  /* How it works */
+  .steps{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--outline);}
+  .step:last-child{border-bottom:none;}
+  .step-num{
+    flex-shrink:0;width:40px;height:40px;border-radius:12px;background:var(--surface-variant);
+    border:1px solid var(--outline);display:flex;align-items:center;justify-content:center;
+    font-weight:800;color:var(--primary);
+  }
+  .step h4{font-size:16px;font-weight:700;margin-bottom:4px;}
+  .step p{font-size:14px;color:var(--text-muted);}
+
+  /* Resources */
+  .resources{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;}
+  .resource-card{
+    background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);
+    padding:32px;display:flex;flex-direction:column;gap:16px;
+    transition:transform .2s,box-shadow .2s,border-color .2s;
+    position:relative;overflow:hidden;
+  }
+  .resource-card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,var(--primary),var(--success));
+  }
+  .resource-card:hover{transform:translateY(-4px);box-shadow:0 20px 44px -16px rgba(0,0,0,.22);border-color:var(--primary);}
+  .resource-icon{
+    width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+    font-size:26px;background:var(--surface-variant);
+  }
+  .resource-card h3{font-size:19px;font-weight:800;}
+  .resource-card p{font-size:14px;color:var(--text-muted);flex-grow:1;}
+  .resource-link{
+    display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--primary);
+    padding-top:4px;
+  }
+  .resource-link .arrow{transition:transform .15s;}
+  .resource-card:hover .resource-link .arrow{transform:translateX(4px);}
+
+  /* Notice */
+  .notice{
+    max-width:1120px;margin:0 auto;background:var(--surface);
+    border:1px solid var(--outline);border-left:4px solid var(--warning);
+    border-radius:var(--radius-lg);padding:24px 28px;
+  }
+  .notice h3{font-size:16px;font-weight:800;margin-bottom:8px;}
+  .notice p{font-size:14px;color:var(--text-muted);}
+
+  /* CTA banner */
+  .cta-banner{
+    max-width:1120px;margin:0 auto;border-radius:var(--radius-xl);
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    padding:64px 40px;text-align:center;color:#fff;position:relative;overflow:hidden;
+  }
+  .cta-banner h2{font-size:clamp(24px,4vw,34px);font-weight:800;margin-bottom:14px;}
+  .cta-banner p{opacity:.9;max-width:520px;margin:0 auto 32px;}
+  .cta-banner .btn-outline{border-color:rgba(255,255,255,.5);color:#fff;}
+  .cta-banner .btn-outline:hover{border-color:#fff;background:rgba(255,255,255,.1);}
+  .cta-banner .btn-primary{background:#fff;color:var(--primary);box-shadow:none;}
+  .cta-banner .btn-primary:hover{transform:translateY(-2px);}
+
+  /* Footer */
+  footer{border-top:1px solid var(--outline);padding:40px 24px;}
+  .foot-wrap{max-width:1120px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  .foot-links{display:flex;gap:24px;font-size:14px;color:var(--text-muted);flex-wrap:wrap;}
+  .foot-links a:hover{color:var(--primary);}
+  .foot-copy{font-size:13px;color:var(--text-muted);}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr;text-align:center;}
+    .hero p{margin-left:auto;margin-right:auto;}
+    .hero-cta,.hero-trust{justify-content:center;}
+    .phone{margin:0 auto;}
+    .float-badge{display:none;}
+  }
+  @media (max-width:640px){
+    .nav-links{display:none;}
+    .stats{gap:32px;}
+    section{padding:64px 20px;}
+    .cta-banner{padding:48px 24px;}
+    .phone{width:240px;height:500px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="Keyla logo">Keyla</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#how">How it works</a>
+      <a href="#resources">Resources</a>
+    </div>
+    <div class="nav-actions">
+      <a class="btn btn-primary btn-sm js-apk-btn" href="https://ruetandroiddevelopers.com/ARIF(KyLa)/Keyla.apk" download>⬇️ Download APK</a>
+      <a class="btn btn-primary btn-sm js-ios-install-btn" href="./app/" hidden>📲 Install App</a>
+      <a class="btn btn-outline btn-sm js-open-btn" href="./app/">🌐 Try in Browser</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">🔐 Zero-knowledge by design</span>
+        <h1>Your passwords, <span>sealed</span>.</h1>
+        <p>Keyla is a password manager that encrypts everything on your device with Argon2id and XChaCha20-Poly1305. Your master password is never stored, never uploaded, and never recoverable by anyone — including us.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary js-apk-btn" href="https://ruetandroiddevelopers.com/ARIF(KyLa)/Keyla.apk" download>⬇️ Download APK</a>
+          <a class="btn btn-primary js-ios-install-btn" href="./app/" hidden>📲 Install App</a>
+          <a class="btn btn-outline js-open-btn" href="./app/">🌐 Try in Browser</a>
+        </div>
+        <p class="js-apk-note" style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
+          Android may ask to allow installs from this browser — that's expected, tap <b>Settings → Allow</b>.
+        </p>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">
+          <b>Price:</b> Free. <b>Platform:</b> Android (browser preview also available).
+        </p>
+        <div class="hero-trust">
+          <span class="avatars"><span>🔑</span><span>🛡️</span><span>👤</span></span>
+          <span>Local-first encryption — the server only ever sees ciphertext</span>
+        </div>
+      </div>
+
+      <div class="phone-stage">
+        <div class="float-badge locked">🔒 Auto-locked after 60s</div>
+        <div class="float-badge health">⚠️ 3 weak passwords found</div>
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="mock-title">My Vault</div>
+            <div class="mock-search">🔍 Search credentials…</div>
+            <div class="mock-score">
+              <div class="mock-ring"><i>82</i></div>
+              <div>
+                <b>Password Health</b>
+                <span>3 weak · 2 reused · 1 old</span>
+              </div>
+            </div>
+            <div class="mock-item">
+              <div class="mock-avatar" style="background:#4F46E5;">G</div>
+              <div><b>Google</b><small>arif@gmail.com</small></div>
+              <div class="mock-dot" style="background:#10B981;"></div>
+            </div>
+            <div class="mock-item">
+              <div class="mock-avatar" style="background:#10B981;">S</div>
+              <div><b>Slack</b><small>arif@work.io</small></div>
+              <div class="mock-dot" style="background:#10B981;"></div>
+            </div>
+            <div class="mock-item">
+              <div class="mock-avatar" style="background:#F59E0B;">B</div>
+              <div><b>Bank</b><small>01XXXXXXXXX</small></div>
+              <div class="mock-dot" style="background:#F59E0B;"></div>
+            </div>
+            <div class="mock-item">
+              <div class="mock-avatar" style="background:#F43F5E;">F</div>
+              <div><b>Old Forum</b><small>arif_2011</small></div>
+              <div class="mock-dot" style="background:#F43F5E;"></div>
+            </div>
+            <div class="mock-item">
+              <div class="mock-avatar" style="background:#3730A3;">N</div>
+              <div><b>Netflix</b><small>family@home</small></div>
+              <div class="mock-dot" style="background:#10B981;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats wrap" style="max-width:1120px;">
+    <div class="stat"><b>0</b><span>Passwords we can read</span></div>
+    <div class="stat"><b>60s</b><span>Auto-lock on idle</span></div>
+    <div class="stat"><b>30s</b><span>Clipboard auto-clear</span></div>
+    <div class="stat"><b>256-bit</b><span>XChaCha20 vault key</span></div>
+  </div>
+
+  <section id="features">
+    <div class="section-head">
+      <span class="eyebrow">Features</span>
+      <h2>Everything a vault should do</h2>
+      <p>From generating a strong password to spotting the weak ones you already have.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(79,70,229,.15);">🗄️</div>
+        <h3>Encrypted Vault</h3>
+        <p>Every credential lives in a SQLCipher-encrypted database, with each field individually sealed before it's written to disk.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(16,185,129,.15);">🎲</div>
+        <h3>Password Generator</h3>
+        <p>CSPRNG-backed random passwords and memorable passphrases, with length, character sets, and ambiguous-character controls.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(245,158,11,.15);">📊</div>
+        <h3>Password Health</h3>
+        <p>A scored dashboard that flags weak, reused, and stale passwords so you know exactly what to fix first.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(244,63,94,.15);">🔒</div>
+        <h3>Auto-lock &amp; Screen Privacy</h3>
+        <p>Locks after 60 seconds of inactivity or when backgrounded, blocks screenshots on Android, and blurs on iOS.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(55,48,163,.15);">👆</div>
+        <h3>Biometric Unlock</h3>
+        <p>Unlock with fingerprint or face, gated by the Keychain/Keystore — with your master password always as the fallback.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(129,140,248,.15);">☁️</div>
+        <h3>Encrypted Backup</h3>
+        <p>Sync an already-encrypted vault blob to your own server. It leaves your device as ciphertext and comes back the same way.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="security">
+    <div class="section-head">
+      <span class="eyebrow">Security</span>
+      <h2>What actually protects your data</h2>
+      <p>No hand-rolled crypto — Keyla uses libsodium primitives the way they were designed to be used.</p>
+    </div>
+    <div class="sec-grid">
+      <div class="sec" style="background:#4F46E5;">
+        <h4>🧮 Argon2id</h4>
+        <p>Your master password is stretched with a memory-hard KDF and a domain-separated salt. <code>Argon2id</code></p>
+      </div>
+      <div class="sec" style="background:#10B981;">
+        <h4>🛡️ XChaCha20-Poly1305</h4>
+        <p>Authenticated encryption envelope-wraps the vault key and every stored field. <code>AEAD</code></p>
+      </div>
+      <div class="sec" style="background:#F59E0B;">
+        <h4>🗝️ SQLCipher</h4>
+        <p>The database file itself is encrypted with a random, device-bound key held in the Keystore.</p>
+      </div>
+      <div class="sec" style="background:#3730A3;">
+        <h4>🙈 Zero-knowledge server</h4>
+        <p>The backend stores a bcrypt account hash and an opaque blob. It never sees a plaintext credential.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps to a sealed vault</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h4>Create your master password</h4>
+          <p>Sign in with your phone number, then set one strong master password. A strength meter guides you, and you get a recovery kit to store safely.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h4>Add your credentials</h4>
+          <p>Save logins with a title, username, password, and notes — or generate a fresh password on the spot. Everything is encrypted before it touches storage.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h4>Unlock, check, and back up</h4>
+          <p>Unlock with biometrics, review your password health score, and push an encrypted backup to your server whenever you want.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="resources" class="band">
+    <div class="section-head">
+      <span class="eyebrow">📚 Resources</span>
+      <h2>Learn more about Keyla</h2>
+      <p>Read the design spec or the current build status before you get started.</p>
+    </div>
+    <div class="resources">
+      <a class="resource-card" href="https://github.com/TheObsidianEye-ARIF-FOYSAL/KeyLa/blob/main/keyla_v1/docs/password-manager-app-spec.md" target="_blank" rel="noopener">
+        <div class="resource-icon" style="background:rgba(79,70,229,.15);">📋</div>
+        <h3>App Specification</h3>
+        <p>The full design spec — crypto model, data layer, screen-by-screen behaviour, and the colour palette behind the UI.</p>
+        <span class="resource-link">Read the spec <span class="arrow">→</span></span>
+      </a>
+      <a class="resource-card" href="https://github.com/TheObsidianEye-ARIF-FOYSAL/KeyLa/blob/main/keyla_v1/docs/progress-report.md" target="_blank" rel="noopener">
+        <div class="resource-icon" style="background:rgba(16,185,129,.15);">🧭</div>
+        <h3>Progress Report</h3>
+        <p>What's built, what's verified, and what's still open — kept current as the project moves.</p>
+        <span class="resource-link">See the status <span class="arrow">→</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="notice">
+      <h3>⚠️ About the browser preview</h3>
+      <p>The web build is a <b>UI preview only</b>. The encrypted SQLCipher database, Keystore-backed key storage, biometric unlock, and screenshot blocking are native-only capabilities that have no browser equivalent — so the in-browser version cannot store a real vault. Use the Android app for actual password storage.</p>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="cta-banner">
+      <h2>Stop reusing that one password.</h2>
+      <p>Get the Android app for the full encrypted vault, or take a look around in your browser first.</p>
+      <div class="hero-cta" style="justify-content:center;">
+        <a class="btn btn-primary js-apk-btn" href="https://ruetandroiddevelopers.com/ARIF(KyLa)/Keyla.apk" download>⬇️ Download APK</a>
+        <a class="btn btn-primary js-ios-install-btn" href="./app/" hidden>📲 Install App</a>
+        <a class="btn btn-outline js-open-btn" href="./app/">🌐 Try in Browser</a>
+      </div>
+      <p style="margin-top:20px;">
+        <a class="subtext-link" style="color:rgba(255,255,255,.8);" href="https://github.com/TheObsidianEye-ARIF-FOYSAL/KeyLa">⭐ View source on GitHub</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-wrap">
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="Keyla logo" style="width:24px;height:24px;">Keyla</a>
+    <div class="foot-links">
+      <a href="./app/">Web App</a>
+      <a href="https://github.com/TheObsidianEye-ARIF-FOYSAL/KeyLa/blob/main/keyla_v1/docs/password-manager-app-spec.md">Spec</a>
+      <a href="https://github.com/TheObsidianEye-ARIF-FOYSAL/KeyLa/blob/main/keyla_v1/docs/progress-report.md">Progress</a>
+      <a href="https://github.com/TheObsidianEye-ARIF-FOYSAL/KeyLa">GitHub</a>
+    </div>
+    <div class="foot-copy">© 2026 Keyla. Local-first, zero-knowledge password management.</div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="iosInstallModal" hidden>
+  <div class="modal-card">
+    <h3>📲 Install Keyla on iPhone</h3>
+    <ol>
+      <li>Tap the <b>Share</b> button in Safari's toolbar.</li>
+      <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
+      <li>Tap <b>Add</b> — Keyla now opens like a real app.</li>
+    </ol>
+    <button class="btn btn-primary" id="iosInstallClose" type="button">Got it</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Android/desktop: "Download APK" is the primary path — it's the native app,
+  // so the encrypted vault, Keystore, and biometrics all actually work.
+  // iOS has no APK equivalent, so it falls back to "Add to Home Screen".
+  var apkBtns = document.querySelectorAll('.js-apk-btn');
+  var iosBtns = document.querySelectorAll('.js-ios-install-btn');
+  var iosModal = document.getElementById('iosInstallModal');
+
+  var ua = navigator.userAgent.toLowerCase();
+  var isIOS = /iphone|ipad|ipod/.test(ua);
+
+  if (isIOS) {
+    apkBtns.forEach(function(b){ b.hidden = true; });
+    iosBtns.forEach(function(b){ b.hidden = false; });
+    document.querySelectorAll('.js-apk-note').forEach(function(n){ n.hidden = true; });
+  }
+
+  iosBtns.forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      iosModal.hidden = false;
+    });
+  });
+
+  var closeBtn = document.getElementById('iosInstallClose');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function(){ iosModal.hidden = true; });
+  }
+  iosModal.addEventListener('click', function(e){
+    if (e.target === iosModal) iosModal.hidden = true;
+  });
+})();
+</script>
+
+</body>
+</html>

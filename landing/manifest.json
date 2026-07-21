@@ -1,7 +1,7 @@
 {
     "name": "Keyla",
     "short_name": "Keyla",
-    "start_url": ".",
+    "start_url": "./app/",
     "display": "standalone",
     "background_color": "#0F1117",
     "theme_color": "#4F46E5",
