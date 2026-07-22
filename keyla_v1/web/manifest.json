@@ -3,7 +3,7 @@
     "short_name": "Keyla",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0F1117",
+    "background_color": "#4F46E5",
     "theme_color": "#4F46E5",
     "description": "A zero-knowledge password manager with an encrypted local vault.",
     "orientation": "portrait-primary",
